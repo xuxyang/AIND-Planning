@@ -407,6 +407,14 @@ class PlanningGraph():
         :return: bool
         """
         # TODO test for Inconsistent Effects between nodes
+        for x in node_a1.action.effect_add:
+            if x in node_a2.action.effect_rem:
+                return True
+
+        for x in node_a1.action.effect_rem:
+            if x in node_a2.action.effect_add:
+                return True
+
         return False
 
     def interference_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
@@ -424,13 +432,29 @@ class PlanningGraph():
         :return: bool
         """
         # TODO test for Interference between nodes
+        for x in node_a1.action.effect_add:
+            if x in node_a2.action.precond_neg:
+                return True
+
+        for x in node_a1.action.effect_rem:
+            if x in node_a2.action.precond_pos:
+                return True
+
+        for x in node_a1.action.precond_pos:
+            if x in node_a2.action.effect_rem:
+                return True
+
+        for x in node_a1.action.precond_neg:
+            if x in node_a2.action.effect_add:
+                return True
+
         return False
 
     def competing_needs_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
         """
         Test a pair of actions for mutual exclusion, returning True if one of
         the precondition of one action is mutex with a precondition of the
-        other action.
+        other action.2
 
         :param node_a1: PgNode_a
         :param node_a2: PgNode_a
@@ -438,6 +462,11 @@ class PlanningGraph():
         """
 
         # TODO test for Competing Needs between nodes
+        for a1_parent in node_a1.parents:
+            for a2_parent in node_a2.parents:
+                if a1_parent.is_mutex(a2_parent):
+                    return True
+
         return False
 
     def update_s_mutex(self, nodeset: set):
