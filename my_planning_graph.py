@@ -306,6 +306,19 @@ class PlanningGraph():
         #   set iff all prerequisite literals for the action hold in S0.  This can be accomplished by testing
         #   to see if a proposed PgNode_a has prenodes that are a subset of the previous S level.  Once an
         #   action node is added, it MUST be connected to the S node instances in the appropriate s_level set.
+        self.a_levels.append(set())
+        for action in self.all_actions:
+            action_node = PgNode_a(action)
+            valid_action = True
+            for precond in action_node.prenodes:
+                if precond not in self.s_levels[level]:
+                    valid_action = False
+                    break
+            if valid_action:
+                parents = [parent for parent in self.s_levels[level] if parent in action_node.prenodes]
+                action_node.parents.update(parents)
+                self.a_levels[level].add(action_node)
+
 
     def add_literal_level(self, level):
         """ add an S (literal) level to the Planning Graph
@@ -324,6 +337,18 @@ class PlanningGraph():
         #   may be "added" to the set without fear of duplication.  However, it is important to then correctly create and connect
         #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
         #   parent sets of the S nodes
+        self.s_levels.append(set())
+        for action_node in self.a_levels[level - 1]:
+            for effect in action_node.action.effect_add:
+                self.s_levels[level].add(PgNode_s(effect, True))
+            for effect in action_node.action.effect_rem:
+                self.s_levels[level].add(PgNode_s(effect, False))
+
+        for effect_node in self.s_levels[level]:
+            for action_node in self.a_levels[level - 1]:
+                if effect_node in action_node.effnodes:
+                    action_node.children.add(effect_node)
+                    effect_node.parents.add(action_node)
 
     def update_a_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for A-level nodes
