@@ -539,15 +539,14 @@ class PlanningGraph():
         level_sum = 0
         # TODO implement
         # for each goal in the problem, determine the level cost, then add them together
-        for clause in self.problem.goal:
-            found = False
-            for level in range(len(self.s_levels)):
-                for s_node in self.s_levels[level]:
+        
+        unfound_goals = list(self.problem.goal)
+        for level in range(len(self.s_levels)):
+            for s_node in self.s_levels[level]:
+                for clause in unfound_goals:
                     if s_node.is_pos and s_node.symbol == clause:
                         level_sum += level
-                        found = True
-                        break
-                if found:
-                    break
-
-        return level_sum
+                        unfound_goals.remove(clause)
+                        if len(unfound_goals) == 0:
+                            return level_sum
+                
